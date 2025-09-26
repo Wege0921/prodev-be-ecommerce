@@ -19,7 +19,7 @@ load_dotenv()  # load .env in project root
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me-locally")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "wege")
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
@@ -155,7 +155,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# This is required for collectstatic
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

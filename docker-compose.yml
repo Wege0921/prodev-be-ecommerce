@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: prodev_db
+      POSTGRES_USER: prodev_user
+      POSTGRES_PASSWORD: prodev_pass
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn ecommerce_backend.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: replace-with-secret
+      POSTGRES_DB: prodev_db
+      POSTGRES_USER: prodev_user
+      POSTGRES_PASSWORD: prodev_pass
+      POSTGRES_HOST: db
+      DJANGO_DEBUG: "True"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
