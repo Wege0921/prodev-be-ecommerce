@@ -30,10 +30,9 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ]
 
-# Add Render external hostname if available
-RENDER_EXTERNAL_HOSTNAME = os.getenv("prodev-be-ecommerce.onrender.com")
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if render_host:
+    ALLOWED_HOSTS.append(render_host)
 
 # Application definition
 
