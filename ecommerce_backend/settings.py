@@ -25,16 +25,15 @@ DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 #ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-_allowed = os.getenv("DJANGO_ALLOWED_HOSTS")
-if _allowed:
-    # comma separated list in env var, e.g. "example.com,localhost"
-    ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
-else:
-    render_host = os.getenv("prodev-be-ecommerce.onrender.com")
-    if render_host:
-        ALLOWED_HOSTS = [render_host]
-    else:
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+]
+
+# Add Render external hostname if available
+RENDER_EXTERNAL_HOSTNAME = os.getenv("prodev-be-ecommerce.onrender.com")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 
