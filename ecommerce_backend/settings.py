@@ -25,18 +25,14 @@ DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-]
-
-# Pick up Render's hostname automatically
+# Render injects its hostname automatically
 render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME")
 if render_host:
     ALLOWED_HOSTS.append(render_host)
 
-# Also hardcode your known domain just in case
+# Also add your known Render domain (safety net)
 ALLOWED_HOSTS.append("prodev-be-ecommerce.onrender.com")
+
 
 
 # Application definition
