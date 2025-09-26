@@ -1,0 +1,52 @@
+# Makefile for Django Project
+
+# Variables
+PYTHON=python
+PIP=pip
+DJANGO_MANAGE=$(PYTHON) manage.py
+
+# Default target
+help:
+	@echo "Available commands:"
+	@echo "  make install       - Install dependencies"
+	@echo "  make run           - Run Django development server"
+	@echo "  make migrate       - Apply database migrations"
+	@echo "  make makemigrations - Create new migrations"
+	@echo "  make createsuperuser - Create Django superuser"
+	@echo "  make shell         - Open Django shell"
+	@echo "  make test          - Run tests"
+	@echo "  make lint          - Run flake8 linter"
+	@echo "  make freeze        - Export dependencies to requirements.txt"
+	@echo "  make clean         - Remove pycache and migration files"
+
+install:
+	$(PIP) install -r requirements.txt
+
+run:
+	$(DJANGO_MANAGE) runserver
+
+migrate:
+	$(DJANGO_MANAGE) migrate
+
+makemigrations:
+	$(DJANGO_MANAGE) makemigrations
+
+createsuperuser:
+	$(DJANGO_MANAGE) createsuperuser
+
+shell:
+	$(DJANGO_MANAGE) shell
+
+test:
+	$(DJANGO_MANAGE) test
+
+lint:
+	flake8 .
+
+freeze:
+	$(PIP) freeze > requirements.txt
+
+clean:
+	find . -name "*.pyc" -delete
+	find . -name "__pycache__" -type d -exec rm -rf {} +
+	find . -path "*/migrations/*.py" ! -name "__init__.py" -delete
