@@ -1,6 +1,7 @@
 asgiref==3.9.2
 attrs==25.3.0
 coverage==7.10.7
+dj-database-url==3.0.1
 Django==4.2.24
 django-filter==25.1
 djangorestframework==3.16.1
