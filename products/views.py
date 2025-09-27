@@ -1,8 +1,8 @@
 # products/views.py
 from rest_framework import viewsets, permissions, filters
 from rest_framework.permissions import IsAdminUser
-from .models import Product, Category
-from .serializers import ProductSerializer, CategorySerializer
+from .models import Product, Category, Order
+from .serializers import ProductSerializer, CategorySerializer,  OrderSerializer
 from .filters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -27,3 +27,17 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ["price", "created_at"]
     ordering = ["-created_at"]
     search_fields = ["title", "description"]
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+      
+        if getattr(self, "swagger_fake_view", False):
+            return Order.objects.none()
+ 
+        if self.request.user.is_authenticated:
+            return Order.objects.filter(user=self.request.user)
+        return Order.objects.none()
