@@ -20,21 +20,33 @@ load_dotenv()  # load .env in project root
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "wege")
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+# SECRET_KEY
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "dev-secret-key"
+    else:
+        raise RuntimeError("DJANGO_SECRET_KEY must be set in production.")
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# ALLOWED_HOSTS
+# Provide a single default string with comma-separated hosts (max 2 args for getenv)
+allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,192.168.8.143").split(",")
+ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env if h.strip()]
 
 # Render injects its hostname automatically
 render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME")
-if render_host:
+if render_host and render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_host)
 
-# Also add your known Render domain (safety net)
-ALLOWED_HOSTS.append("prodev-be-ecommerce.onrender.com")
+# Optional: Add known Render domain (safety net) via env if desired
+known_render = os.getenv("KNOWN_RENDER_DOMAIN")
+if known_render and known_render not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(known_render)
 
-
+TELEGRAM_BOT_TOKEN = "8241929221:AAFZy8lVaqRuYm2yD_uW4P4KTzxmzc8Rago"
+TELEGRAM_CHAT_ID = "-4821244676"
 
 # Application definition
 
@@ -49,6 +61,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django_filters",
     "drf_spectacular",
+    "corsheaders",
     "users",
     "products",
 ]
@@ -56,6 +69,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -136,6 +150,14 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "products.pagination.StandardResultsSetPagination",
     "PAGE_SIZE": 12,
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": os.getenv("DRF_THROTTLE_ANON", "60/min"),
+        "user": os.getenv("DRF_THROTTLE_USER", "120/min"),
+    },
 }
 
 SIMPLE_JWT = {
@@ -175,7 +197,37 @@ STATIC_URL = '/static/'
 # This is required for collectstatic
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# CORS/CSRF
+if DEBUG and os.getenv("CORS_ALLOW_ALL", "True") == "True":
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = [
+        o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
+    ]
+
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
+]
+
+# Security headers (prod)
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "True") == "True"
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "3600"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
