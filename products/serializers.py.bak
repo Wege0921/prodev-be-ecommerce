@@ -7,11 +7,9 @@ import requests
 import logging
 
 class CategorySerializer(serializers.ModelSerializer):
-    children_count = serializers.IntegerField(read_only=True)
-    has_children = serializers.BooleanField(read_only=True)
     class Meta:
         model = Category
-        fields = ["id", "name", "parent", "children_count", "has_children", "created_at"]
+        fields = ["id", "name", "created_at"]
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)

@@ -26,7 +26,12 @@ class OrderItemAdmin(admin.ModelAdmin):
     item_total.short_description = "Item Total"
 
 
-admin.site.register(Category)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "parent", "created_at")
+    list_filter = ("parent", "created_at")
+    search_fields = ("name",)
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("id", "title", "category", "price", "stock", "is_featured", "created_at")

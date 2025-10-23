@@ -20,10 +20,16 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from django.shortcuts import redirect
 from django.http import HttpResponse
+from django.conf import settings
+from django.conf.urls.static import static
+
+path('api/auth/', include(('users.urls', 'users'), namespace='users')),
+path('api/auth/', include(('auth_app.urls', 'auth_app'), namespace='auth_app')),
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/", include("users.urls")),
+    path('api/auth/', include(('users.urls', 'users'), namespace='users')),
+    path('api/auth/', include(('auth_app.urls', 'auth_app'), namespace='auth_app')),
     path("api/", include("products.urls")),
     # schema and docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
@@ -32,3 +38,6 @@ urlpatterns = [
     # Welcome page and redirect root URL to Swagger
     path('', lambda request: redirect('swagger-ui', permanent=False)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

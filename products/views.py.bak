@@ -6,11 +6,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.files.storage import default_storage
 from django.conf import settings
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 import requests
 import logging
-from django.db.models import Count, Case, When, BooleanField
 from .models import Product, Category, Order, ContactMessage
 from .serializers import ProductSerializer, CategorySerializer,  OrderSerializer, ContactMessageSerializer
 from .filters import ProductFilter
@@ -22,34 +19,12 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             return True
         return bool(request.user and request.user.is_authenticated and request.user.is_admin)
 
-@method_decorator(cache_page(getattr(settings, 'CACHE_TTL', 300)), name="list")
-@method_decorator(cache_page(getattr(settings, 'CACHE_TTL', 300)), name="retrieve")
 class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = "id"
 
-    def get_queryset(self):
-        qs = Category.objects.all().annotate(children_count=Count("children"))
-        qs = qs.annotate(
-            has_children=Case(
-                When(children_count__gt=0, then=True),
-                default=False,
-                output_field=BooleanField(),
-            )
-        )
-        parent = self.request.query_params.get("parent")
-        if parent is None:
-            qs = qs.filter(parent__isnull=True)
-        else:
-            if parent == "":
-                qs = qs.filter(parent__isnull=True)
-            else:
-                qs = qs.filter(parent_id=parent)
-        return qs.order_by("name")
-
-
-@method_decorator(cache_page(getattr(settings, 'CACHE_TTL', 120)), name="list")
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related("category").all()
     serializer_class = ProductSerializer

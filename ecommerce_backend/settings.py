@@ -15,12 +15,20 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import dj_database_url
+from decouple import config
+
 
 load_dotenv()  # load .env in project root
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
+
+
+#Media files
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # SECRET_KEY
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
@@ -45,8 +53,28 @@ known_render = os.getenv("KNOWN_RENDER_DOMAIN")
 if known_render and known_render not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(known_render)
 
-TELEGRAM_BOT_TOKEN = "8241929221:AAFZy8lVaqRuYm2yD_uW4P4KTzxmzc8Rago"
-TELEGRAM_CHAT_ID = "-4821244676"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+#Cloudinary_Storage
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+}
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+#DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 
 # Application definition
 
@@ -62,6 +90,9 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "corsheaders",
+    'cloudinary',
+    'cloudinary_storage',
+    "auth_app",
     "users",
     "products",
 ]
@@ -116,6 +147,34 @@ DATABASES = {
 if os.getenv("DATABASE_URL"):
     DATABASES["default"] = dj_database_url.config(default=os.getenv("DATABASE_URL"))
 
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1")
+CACHE_TTL = int(os.getenv("CACHE_TTL_SECONDS", "300"))
+_use_redis_cache = False
+try:
+    import django_redis  # type: ignore
+    if REDIS_URL:
+        _use_redis_cache = True
+except Exception:
+    _use_redis_cache = False
+
+if _use_redis_cache:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-locmem",
+        }
+    }
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -125,13 +184,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 4},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    # Removed NumericPasswordValidator to allow numeric PINs
 ]
 
 
