@@ -11,6 +11,8 @@ djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 drf-spectacular==0.28.0
 django-redis==5.4.0
+celery[redis]==5.4.0
+django-celery-beat==2.6.0
 flake8==7.1.1
 gunicorn==23.0.0
 idna==3.11

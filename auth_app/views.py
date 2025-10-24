@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import ResetPinSerializer
+from django.db import transaction
+from .tasks import send_password_reset_notification
 import os
 import requests
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -26,6 +28,7 @@ class ResetPinView(APIView):
 
         user.set_password(new_pin)
         user.save(update_fields=['password'])
+        transaction.on_commit(lambda: send_password_reset_notification.delay(user.id))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

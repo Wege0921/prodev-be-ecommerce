@@ -3,8 +3,7 @@ from .models import Product, Category, Order, OrderItem, ContactMessage
 from django.db import transaction
 from django.db.models import F
 from django.conf import settings
-import requests
-import logging
+from .tasks import send_order_telegram
 
 class CategorySerializer(serializers.ModelSerializer):
     children_count = serializers.IntegerField(read_only=True)
@@ -84,30 +83,8 @@ class OrderSerializer(serializers.ModelSerializer):
                     quantity=quantity,
                 )
 
-        # Telegram notification on new order
-        bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
-        chat_id = getattr(settings, 'TELEGRAM_CHAT_ID', None)
-        if bot_token and chat_id:
-            try:
-                item_count = order.items.count()
-                text = (
-                    f"New Order #{order.id}\n"
-                    f"User: {getattr(user, 'username', str(user))}\n"
-                    f"Items: {item_count}\n"
-                    f"Status: {order.status}\n"
-                    f"Created: {order.created_at:%Y-%m-%d %H:%M:%S}\n"
-                    f"Address: {order.delivery_address or '-'}\n"
-                    f"Proof: {'Yes' if order.payment_proof_url else 'No'}"
-                )
-                r = requests.post(
-                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                    json={"chat_id": chat_id, "text": text},
-                    timeout=6,
-                )
-                if r.status_code >= 400:
-                    logging.getLogger(__name__).warning("Telegram sendMessage(new order) failed: %s %s", r.status_code, r.text)
-            except Exception as e:
-                logging.getLogger(__name__).exception("Telegram notification (new order) failed: %s", e)
+        # Enqueue Telegram notification after commit
+        transaction.on_commit(lambda: send_order_telegram.delay(order.id))
 
         return order
 

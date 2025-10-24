@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'cloudinary',
     'cloudinary_storage',
+    'django_celery_beat',
     "auth_app",
     "users",
     "products",
@@ -181,6 +182,13 @@ else:
             "LOCATION": "unique-locmem",
         }
     }
+
+# Celery
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

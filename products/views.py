@@ -13,6 +13,8 @@ import logging
 from django.db.models import Count, Case, When, BooleanField
 from .models import Product, Category, Order, ContactMessage
 from .serializers import ProductSerializer, CategorySerializer,  OrderSerializer, ContactMessageSerializer
+from .tasks import send_contact_telegram, process_payment_proof
+from django.db import transaction
 from .filters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -92,6 +94,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             url = path
         order.payment_proof_url = url
         order.save(update_fields=["payment_proof_url"])
+        # enqueue optional post-processing in background
+        transaction.on_commit(lambda: process_payment_proof.delay(order.id, url))
         return Response({"payment_proof_url": url}, status=200)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
@@ -137,28 +141,8 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         msg = serializer.save()
 
-        # Telegram webhook notification if configured
-        bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
-        chat_id = getattr(settings, 'TELEGRAM_CHAT_ID', None)
-        if bot_token and chat_id:
-            try:
-                text = (
-                    f"New Contact Message\n"
-                    f"From: {msg.name}\n"
-                    f"Phone: {msg.phone or '-'}\n"
-                    f"Email: {msg.email or '-'}\n"
-                    f"Subject: {msg.subject}\n"
-                    f"Message: {msg.message}"
-                )
-                r = requests.post(
-                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                    json={"chat_id": chat_id, "text": text},
-                    timeout=6,
-                )
-                if r.status_code >= 400:
-                    logging.getLogger(__name__).warning("Telegram sendMessage failed: %s %s", r.status_code, r.text)
-            except Exception as e:
-                logging.getLogger(__name__).exception("Telegram notification failed: %s", e)
+        # Enqueue Telegram notification via Celery after commit
+        transaction.on_commit(lambda: send_contact_telegram.delay(msg.id))
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
