@@ -53,8 +53,15 @@ known_render = os.getenv("KNOWN_RENDER_DOMAIN")
 if known_render and known_render not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(known_render)
 
+#Telegram integration for order and customer support
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+#OAuth 2.0 Google signup/login
+GOOGLE_CLIENT_ID_ANDROID = os.getenv("GOOGLE_CLIENT_ID_ANDROID")
+GOOGLE_CLIENT_ID_WEB = os.getenv("GOOGLE_CLIENT_ID_WEB")
+#GOOGLE_CLIENT_ID_IOS = os.getenv("GOOGLE_CLIENT_ID_IOS")
+
 
 #Cloudinary_Storage
 
