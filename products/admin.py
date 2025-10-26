@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, Order, OrderItem, ContactMessage
+from .models import Category, Product, ProductImage, Order, OrderItem, ContactMessage
 
 
 class OrderItemInline(admin.TabularInline): 
@@ -38,6 +38,18 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ("category", "is_featured", "created_at")
     search_fields = ("title",)
     list_editable = ("is_featured",)
+    inlines = []
+
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ("url", "sort_order")
+    ordering = ("sort_order",)
+
+
+# Attach inline after its declaration
+ProductAdmin.inlines = [ProductImageInline]
 
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem, OrderItemAdmin)

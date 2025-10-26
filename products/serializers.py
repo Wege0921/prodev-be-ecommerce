@@ -15,6 +15,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Category.objects.all(), source="category")
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -28,9 +29,17 @@ class ProductSerializer(serializers.ModelSerializer):
             "is_featured",
             "category",
             "category_id",
+            "images",
             "created_at",
             "updated_at",
         ]
+
+    def get_images(self, obj):
+        # Return list of ProductImage URLs; fall back to single image_url if set
+        urls = [img.url for img in getattr(obj, 'images').all()] if hasattr(obj, 'images') else []
+        if not urls and getattr(obj, 'image_url', ''):
+            urls = [obj.image_url]
+        return urls
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)

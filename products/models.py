@@ -50,6 +50,21 @@ class Product(models.Model):
         return self.title
 
 
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, related_name="images", on_delete=models.CASCADE, db_index=True)
+    url = models.URLField()
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        indexes = [
+            models.Index(fields=["product", "sort_order"]),
+        ]
+
+    def __str__(self):
+        return f"Image for {self.product_id} ({self.sort_order})"
+
 class Order(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

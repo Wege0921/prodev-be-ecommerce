@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
-
+ALLOWED_HOSTS = ["192.168.81.128", "localhost", "127.0.0.1"]
 #Media files
 
 MEDIA_URL = '/media/'
@@ -40,7 +40,7 @@ if not SECRET_KEY:
 
 # ALLOWED_HOSTS
 # Provide a single default string with comma-separated hosts (max 2 args for getenv)
-allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,192.168.8.143").split(",")
+allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,192.168.81.128").split(",")
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env if h.strip()]
 
 # Render injects its hostname automatically
