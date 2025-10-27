@@ -24,7 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["192.168.81.128", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["192.168.81.128", "localhost", "127.0.0.1", 'plus1eyewear.up.railway.app']
+
+CSRF_TRUSTED_ORIGINS = ['https://plus1eyewear.up.railway.app']
 #Media files
 
 MEDIA_URL = '/media/'
