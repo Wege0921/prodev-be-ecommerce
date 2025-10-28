@@ -34,7 +34,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_images(self, obj):
+    def get_images(self, obj) -> list[str]:
         # Return list of ProductImage URLs; fall back to single image_url if set
         urls = [img.url for img in getattr(obj, 'images').all()] if hasattr(obj, 'images') else []
         if not urls and getattr(obj, 'image_url', ''):

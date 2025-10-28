@@ -245,8 +245,8 @@ SIMPLE_JWT = {
 
 # drf-spectacular
 SPECTACULAR_SETTINGS = {
-    "TITLE": "ProDev E-Commerce API",
-    "DESCRIPTION": "E-commerce backend APIs (products, categories, users).",
+    "TITLE": "PlusOne Eyewear API",
+    "DESCRIPTION": "API documentation for PlusOne Eyewear backend.",
     "VERSION": "1.0.0",
 }
 

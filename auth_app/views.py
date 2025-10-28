@@ -8,6 +8,8 @@ from .tasks import send_password_reset_notification
 import os
 import requests
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import serializers
+from drf_spectacular.utils import extend_schema, OpenApiTypes
 
 User = get_user_model()
 
@@ -15,9 +17,17 @@ class ResetPinView(APIView):
     authentication_classes = []  # unauthenticated for now (biometric is on-device)
     permission_classes = []      # add throttling/rate limit in production
 
+    @extend_schema(
+        request=lambda: type("ResetPinIn", (serializers.Serializer,), {
+            "phone": serializers.CharField(),
+            "new_pin": serializers.CharField()
+        })(),
+        responses={204: None, 400: OpenApiTypes.OBJECT, 404: OpenApiTypes.OBJECT}
+    )
     def post(self, request, *args, **kwargs):
         s = ResetPinSerializer(data=request.data)
-        s.is_valid(raise_exception=True)
+        if not s.is_valid():
+            return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
         phone = s.validated_data['phone']
         new_pin = s.validated_data['new_pin']
 
@@ -36,6 +46,19 @@ class GoogleAuthView(APIView):
     authentication_classes = []
     permission_classes = []
 
+    @extend_schema(
+        request=lambda: type("GoogleAuthIn", (serializers.Serializer,), {
+            "id_token": serializers.CharField()
+        })(),
+        responses={
+            200: lambda: type("GoogleAuthOut", (serializers.Serializer,), {
+                "access": serializers.CharField(),
+                "refresh": serializers.CharField(),
+                "user": serializers.DictField()
+            })(),
+            400: OpenApiTypes.OBJECT
+        }
+    )
     def post(self, request, *args, **kwargs):
         id_token = request.data.get('id_token')
         if not id_token:
