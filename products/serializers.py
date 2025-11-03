@@ -34,12 +34,29 @@ class ProductSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_images(self, obj) -> list[str]:
-        # Return list of ProductImage URLs; fall back to single image_url if set
-        urls = [img.url for img in getattr(obj, 'images').all()] if hasattr(obj, 'images') else []
-        if not urls and getattr(obj, 'image_url', ''):
-            urls = [obj.image_url]
-        return urls
+    def _cld_variant(self, url: str, transform: str) -> str:
+        # Insert Cloudinary transform after '/upload/' if present; otherwise return original URL
+        try:
+            marker = '/upload/'
+            idx = url.find(marker)
+            if idx == -1:
+                return url
+            return url[: idx + len(marker)] + f"{transform}/" + url[idx + len(marker):]
+        except Exception:
+            return url
+
+    def get_images(self, obj):
+        # Build list of dicts with thumb/full variants; fall back to original for non-Cloudinary URLs
+        raw_urls = [img.url for img in getattr(obj, 'images').all()] if hasattr(obj, 'images') else []
+        if not raw_urls and getattr(obj, 'image_url', ''):
+            raw_urls = [obj.image_url]
+
+        results = []
+        for u in raw_urls:
+            thumb = self._cld_variant(u, 'f_auto,q_auto:eco,c_limit,w_300')
+            full = self._cld_variant(u, 'f_auto,q_auto,c_limit,w_1200')
+            results.append({"thumb": thumb, "full": full})
+        return results
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
