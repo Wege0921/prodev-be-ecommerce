@@ -86,6 +86,9 @@ class Order(models.Model):
     delivery_address = models.CharField(max_length=255, blank=True)
     payment_proof_url = models.URLField(blank=True)
 
+    class Meta:
+        ordering = ["-created_at", "id"]
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")

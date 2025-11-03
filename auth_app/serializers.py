@@ -11,3 +11,13 @@ class ResetPinSerializer(serializers.Serializer):
         if not value.startswith('+251'):
             raise serializers.ValidationError('Phone must be E.164, e.g. +2519xxxxxxx')
         return value
+
+
+class GoogleAuthInSerializer(serializers.Serializer):
+    id_token = serializers.CharField()
+
+
+class GoogleAuthOutSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+    user = serializers.DictField()

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import ResetPinSerializer
+from .serializers import ResetPinSerializer, GoogleAuthInSerializer, GoogleAuthOutSerializer
 from django.db import transaction
 from .tasks import send_password_reset_notification
 import os
@@ -18,10 +18,7 @@ class ResetPinView(APIView):
     permission_classes = []      # add throttling/rate limit in production
 
     @extend_schema(
-        request=lambda: type("ResetPinIn", (serializers.Serializer,), {
-            "phone": serializers.CharField(),
-            "new_pin": serializers.CharField()
-        })(),
+        request=ResetPinSerializer,
         responses={204: None, 400: OpenApiTypes.OBJECT, 404: OpenApiTypes.OBJECT}
     )
     def post(self, request, *args, **kwargs):
@@ -47,17 +44,8 @@ class GoogleAuthView(APIView):
     permission_classes = []
 
     @extend_schema(
-        request=lambda: type("GoogleAuthIn", (serializers.Serializer,), {
-            "id_token": serializers.CharField()
-        })(),
-        responses={
-            200: lambda: type("GoogleAuthOut", (serializers.Serializer,), {
-                "access": serializers.CharField(),
-                "refresh": serializers.CharField(),
-                "user": serializers.DictField()
-            })(),
-            400: OpenApiTypes.OBJECT
-        }
+        request=GoogleAuthInSerializer,
+        responses={200: GoogleAuthOutSerializer, 400: OpenApiTypes.OBJECT}
     )
     def post(self, request, *args, **kwargs):
         id_token = request.data.get('id_token')
