@@ -46,16 +46,18 @@ class ProductSerializer(serializers.ModelSerializer):
             return url
 
     def get_images(self, obj):
-        # Build list of dicts with thumb/full variants; fall back to original for non-Cloudinary URLs
+        # Build list of dicts with tiny/thumb/medium/full variants; fall back to original for non-Cloudinary URLs
         raw_urls = [img.url for img in getattr(obj, 'images').all()] if hasattr(obj, 'images') else []
         if not raw_urls and getattr(obj, 'image_url', ''):
             raw_urls = [obj.image_url]
 
         results = []
         for u in raw_urls:
-            thumb = self._cld_variant(u, 'f_auto,q_auto:eco,c_limit,w_300')
-            full = self._cld_variant(u, 'f_auto,q_auto,c_limit,w_1200')
-            results.append({"thumb": thumb, "full": full})
+            tiny = self._cld_variant(u, 'f_auto,q_auto:low,c_limit,dpr_auto,w_120')
+            thumb = self._cld_variant(u, 'f_auto,q_auto:eco,c_limit,dpr_auto,w_240')
+            medium = self._cld_variant(u, 'f_auto,q_auto,c_limit,dpr_auto,w_800')
+            full = self._cld_variant(u, 'f_auto,q_auto,c_limit,dpr_auto,w_1600')
+            results.append({"tiny": tiny, "thumb": thumb, "medium": medium, "full": full})
         return results
 
 class OrderItemSerializer(serializers.ModelSerializer):
