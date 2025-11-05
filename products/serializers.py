@@ -57,7 +57,8 @@ class ProductSerializer(serializers.ModelSerializer):
             thumb = self._cld_variant(u, 'f_auto,q_auto:eco,c_limit,dpr_auto,w_240')
             medium = self._cld_variant(u, 'f_auto,q_auto,c_limit,dpr_auto,w_800')
             full = self._cld_variant(u, 'f_auto,q_auto,c_limit,dpr_auto,w_1600')
-            results.append({"tiny": tiny, "thumb": thumb, "medium": medium, "full": full})
+            hero = self._cld_variant(u, 'f_auto,q_auto,c_limit,dpr_auto,w_2000')
+            results.append({"tiny": tiny, "thumb": thumb, "medium": medium, "full": full, "hero": hero})
         return results
 
 class OrderItemSerializer(serializers.ModelSerializer):
